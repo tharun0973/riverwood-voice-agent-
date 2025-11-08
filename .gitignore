@@ -1,0 +1,5 @@
+echo ".env
+__pycache__/
+*.mp3
+*.pdf
+venv/" > .gitignore

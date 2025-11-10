@@ -2,18 +2,18 @@ import os
 import requests
 
 def generate_elevenlabs_audio(text):
-    # Load voice ID and Railway URL from .env
-    voice_id = os.getenv("ELEVENLABS_VOICE_ID", "hGb0Exk8cp4vQEnwolxa")
-    railway_url = os.getenv("RAILWAY_URL", "http://localhost:5000")
-    
+    # Load API keys and voice ID from environment
+    api_key = os.getenv("ELEVENLABS_API_KEY")
+    voice_id = os.getenv("ELEVENLABS_VOICE_ID")
+    railway_url = os.getenv("RAILWAY_URL")  # e.g. https://riverwood-voice-agent-production.up.railway.app
+
     # ElevenLabs API endpoint
-    url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
-    
+    endpoint = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
+
     headers = {
-        "xi-api-key": os.getenv("ELEVENLABS_API_KEY"),
+        "xi-api-key": api_key,
         "Content-Type": "application/json"
     }
-    
     payload = {
         "text": text,
         "voice_settings": {
@@ -21,16 +21,17 @@ def generate_elevenlabs_audio(text):
             "similarity_boost": 0.75
         }
     }
-    
-    # Send request to ElevenLabs
-    response = requests.post(url, headers=headers, json=payload)
-    if response.status_code != 200:
-        raise Exception(f"ElevenLabs API error: {response.status_code} - {response.text}")
-    
-    # Save audio to static folder
-    audio_path = "static/output.mp3"
-    with open(audio_path, "wb") as f:
-        f.write(response.content)
-    
-    # Return public URL for Twilio playback
-    return f"{railway_url}/static/output.mp3"
+
+    response = requests.post(endpoint, headers=headers, json=payload)
+
+    if response.status_code == 200:
+        # Save audio to static/output.mp3
+        audio_path = "static/output.mp3"
+        with open(audio_path, "wb") as f:
+            f.write(response.content)
+
+        # Return public URL for Twilio playback
+        return f"{railway_url}/static/output.mp3"
+    else:
+        print("ElevenLabs error:", response.status_code, response.text)
+        return ""

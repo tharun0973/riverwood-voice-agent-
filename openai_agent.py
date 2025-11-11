@@ -1,19 +1,26 @@
-from openai import OpenAI
 import os
+from openai import OpenAI
 
-# Initialize OpenAI client with your API key
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+# Load your OpenAI API key from environment
+openai_api_key = os.getenv("OPENAI_API_KEY", "").strip()
+client = OpenAI(api_key=openai_api_key)
 
 def get_gpt_reply(user_query):
-    try:
-        chat_completion = client.chat.completions.create(
-            model="gpt-4o",
-            messages=[
-                {"role": "system", "content": "You are Ayasha, a helpful voice assistant."},
-                {"role": "user", "content": user_query}
-            ]
-        )
-        return chat_completion.choices[0].message.content
-    except Exception as e:
-        print("OpenAI error:", str(e))
-        return "Sorry, I couldn't generate a reply right now."
+    chat_completion = client.chat.completions.create(
+        model="gpt-4o",
+        messages=[
+            {
+                "role": "system",
+                "content": (
+                    "You are Ayasha, an energetic Indian voice assistant working for Riverwood. "
+                    "Always begin with this greeting: 'Hi, thanks for calling Riverwood. This is Ayasha. How can I help you today?' "
+                    "Then respond helpfully to the user's query in a warm, conversational tone."
+                )
+            },
+            {
+                "role": "user",
+                "content": user_query
+            }
+        ]
+    )
+    return chat_completion.choices[0].message.content

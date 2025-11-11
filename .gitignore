@@ -3,3 +3,6 @@ __pycache__/
 *.mp3
 *.pdf
 venv/" > .gitignore
+.env
+.env
+.env

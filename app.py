@@ -8,6 +8,8 @@ app = Flask(__name__)
 
 @app.route("/voice", methods=["POST"])
 def voice_reply():
+    print("✅ Incoming call received at /voice")  # Step 1 logging
+
     secret = request.args.get("secret")
     if secret != "riverwood-demo-secret":
         return "Unauthorized", 403

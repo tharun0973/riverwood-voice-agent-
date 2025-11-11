@@ -1,5 +1,5 @@
 from flask import Flask, request, Response
-from elevenlabs_agent import generate_elevenlabs_audio
+from elevenlabs import generate_elevenlabs_audio
 from openai_agent import get_gpt_reply
 from twilio.twiml.voice_response import VoiceResponse
 import os

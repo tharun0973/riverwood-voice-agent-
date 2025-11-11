@@ -1,4 +1,4 @@
-from flask import Flask, request
+from flask import Flask, request, Response
 from dotenv import load_dotenv
 import os
 from openai_agent import get_gpt_reply
@@ -9,8 +9,11 @@ app = Flask(__name__)
 
 @app.route("/voice", methods=["POST"])
 def voice_reply():
-    # Optional: validate webhook secret
-    if request.headers.get("X-Twilio-Secret") != os.getenv("TWILIO_WEBHOOK_SECRET"):
+    # Accept secret from query param (fallback for Twilio trial accounts)
+    expected_secret = os.getenv("TWILIO_WEBHOOK_SECRET")
+    received_secret = request.args.get("secret") or request.headers.get("X-Twilio-Secret")
+
+    if expected_secret and received_secret != expected_secret:
         return "Unauthorized", 403
 
     # Get user query from Twilio
@@ -26,7 +29,12 @@ def voice_reply():
     print("Audio URL:", audio_url)
 
     # Return TwiML response
-    return f'<Response><Play>{audio_url}</Play></Response>', 200, {'Content-Type': 'text/xml'}
+    twiml = f"""<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+    <Play>{audio_url}</Play>
+</Response>"""
+
+    return Response(twiml, mimetype="text/xml")
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)

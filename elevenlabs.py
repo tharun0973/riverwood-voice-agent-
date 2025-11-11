@@ -3,7 +3,7 @@ import requests
 
 def generate_elevenlabs_audio(text):
     # Load API keys and voice ID from environment
-    api_key = os.getenv("ELEVENLABS_API_KEY")
+    api_key = os.getenv("ELEVENLABS_API_KEY", "").strip()
     voice_id = os.getenv("ELEVENLABS_VOICE_ID")
     railway_url = os.getenv("RAILWAY_URL")  # e.g. https://riverwood-voice-agent-production.up.railway.app
 

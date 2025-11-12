@@ -1,65 +1,42 @@
-print("🛠️ Railway container booted — app.py is executing")
-from flask import Flask, request, Response, send_from_directory
-from elevenlabs import generate_elevenlabs_audio
-from openai_agent import get_gpt_reply
 import os
+import requests
 
-app = Flask(__name__)
+def generate_elevenlabs_audio(text):
+    print("🔊 Generating ElevenLabs audio for:", text)
 
-@app.route("/voice", methods=["POST"])
-def voice_reply():
-    try:
-        print("✅ Incoming call received at /voice")
+    # Match Railway variable name exactly
+    api_key = os.getenv("eleven_labs_api_key", "").strip()
+    voice_id = os.getenv("ELEVENLABS_VOICE_ID", "").strip()
+    railway_url = os.getenv("RAILWAY_URL", "").strip()
 
-        secret = request.args.get("secret")
-        if secret != "riverwood-demo-secret":
-            print("❌ Invalid secret")
-            return "Unauthorized", 403
+    if not api_key or not voice_id or not railway_url:
+        print("❌ Missing ElevenLabs config — check API key, voice ID, or Railway URL")
+        raise Exception("Missing ElevenLabs configuration")
 
-        user_query = request.form.get("SpeechResult", "").strip()
-        print("User said:", user_query)
+    endpoint = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
+    headers = {
+        "xi-api-key": api_key,
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "text": text,
+        "voice_settings": {
+            "stability": 0.5,
+            "similarity_boost": 0.75
+        }
+    }
 
-        if not user_query:
-            print("⚠️ No user input detected")
-            fallback_twiml = """<?xml version="1.0" encoding="UTF-8"?>
-<Response>
-    <Say>I didn’t catch that. Could you please repeat?</Say>
-</Response>"""
-            return Response(fallback_twiml, mimetype="text/xml")
+    response = requests.post(endpoint, headers=headers, json=payload)
 
-        reply_text = get_gpt_reply(user_query)
-        print("🧠 GPT replied:", reply_text)
+    if response.status_code != 200:
+        print("❌ ElevenLabs error:", response.status_code, response.text)
+        raise Exception("ElevenLabs audio generation failed")
 
-        audio_url = generate_elevenlabs_audio(reply_text)
-        print("🔊 Audio URL:", audio_url)
+    # Save audio to static/output.mp3
+    audio_path = "static/output.mp3"
+    with open(audio_path, "wb") as f:
+        f.write(response.content)
 
-        if not audio_url:
-            print("⚠️ Audio generation failed — fallback to Say")
-            fallback_twiml = f"""<?xml version="1.0" encoding="UTF-8"?>
-<Response>
-    <Say>{reply_text}</Say>
-</Response>"""
-            return Response(fallback_twiml, mimetype="text/xml")
-
-        twiml = f"""<?xml version="1.0" encoding="UTF-8"?>
-<Response>
-    <Play>{audio_url}</Play>
-</Response>"""
-        return Response(twiml, mimetype="text/xml")
-
-    except Exception as e:
-        print("❌ voice_reply crashed:", e)
-        fallback_twiml = """<?xml version="1.0" encoding="UTF-8"?>
-<Response>
-    <Say>Sorry, something went wrong on our end.</Say>
-</Response>"""
-        return Response(fallback_twiml, mimetype="text/xml"), 500
-
-@app.route("/static/<path:filename>")
-def serve_static(filename):
-    return send_from_directory("static", filename)
-
-if __name__ == "__main__":
-    print("🚀 Flask app is starting on Railway...")
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port, debug=True)
+    audio_url = f"{railway_url}/static/output.mp3"
+    print("✅ Audio URL:", audio_url)
+    return audio_url

@@ -1,3 +1,4 @@
+print("🛠️ Railway container booted — app.py is executing")
 from flask import Flask, request, Response, send_from_directory
 from elevenlabs import generate_elevenlabs_audio
 from openai_agent import get_gpt_reply

@@ -4,7 +4,8 @@ import requests
 def generate_elevenlabs_audio(text):
     print("🔊 Generating ElevenLabs audio for:", text)
 
-    api_key = os.getenv("ELEVENLABS_API_KEY", "").strip()
+    # Match Railway variable name exactly
+    api_key = os.getenv("eleven_labs_api_key", "").strip()
     voice_id = os.getenv("ELEVENLABS_VOICE_ID", "").strip()
     railway_url = os.getenv("RAILWAY_URL", "").strip()
 

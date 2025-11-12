@@ -54,12 +54,11 @@ def voice_reply():
 </Response>"""
         return Response(fallback_twiml, mimetype="text/xml"), 500
 
-# Serve static .mp3 files
 @app.route("/static/<path:filename>")
 def serve_static(filename):
     return send_from_directory("static", filename)
 
 if __name__ == "__main__":
+    print("🚀 Flask app is starting on Railway...")
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=True)
-
